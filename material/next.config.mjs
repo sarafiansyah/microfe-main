@@ -3,6 +3,16 @@ import { NextFederationPlugin } from "@module-federation/nextjs-mf";
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     reactStrictMode: true,
+    async rewrites() {
+        return [
+            {
+                source: "/api/conversion/conversions",
+                destination:
+                    "https://api-dev.kedaipangan.com/internal-process/api/v1/conversion/conversions",
+            },
+        ];
+    },
+
     webpack: (config, { isServer }) => {
         config.plugins.push(
             new NextFederationPlugin({
@@ -15,7 +25,7 @@ const nextConfig = {
                 },
                 remotes: {
                     adminWeb:
-                        "adminWeb@http://localhost:3000/_next/static/chunks/remoteEntry.js",
+                        "adminWeb@http://localhost:3001/_next/static/chunks/remoteEntry.js",
                 },
                 shared: {
                     // react: { singleton: true, requiredVersion: false },

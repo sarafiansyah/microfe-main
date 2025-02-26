@@ -5,7 +5,11 @@ import { useState } from "react";
 
 const { Header, Sider, Content } = Layout;
 
-const DashboardLayout = ({ children }) => {
+const DashboardLayout = ({
+    children,
+    disableLayout = false,
+    title = "Admin Web",
+}) => {
     const router = useRouter();
     const [collapsed, setCollapsed] = useState(false);
 
@@ -15,9 +19,12 @@ const DashboardLayout = ({ children }) => {
         router.push("/login");
     };
 
+    if (disableLayout) {
+        return <>{children}</>;
+    }
+
     return (
         <Layout style={{ minHeight: "100vh" }}>
-            {/* Sidebar */}
             <Sider
                 collapsible
                 collapsed={collapsed}
@@ -36,7 +43,7 @@ const DashboardLayout = ({ children }) => {
                         borderBottom: "1px solid rgba(255, 255, 255, 0.2)",
                     }}
                 >
-                    {!collapsed && <span>My App</span>}
+                    {!collapsed && <span>Microfrontend</span>}
                     {collapsed ? (
                         <MenuUnfoldOutlined
                             onClick={() => setCollapsed(!collapsed)}
@@ -79,7 +86,6 @@ const DashboardLayout = ({ children }) => {
                     </Menu.Item>
                 </Menu>
 
-                {/* Version text at the bottom */}
                 <div
                     style={{
                         position: "absolute",
@@ -94,7 +100,6 @@ const DashboardLayout = ({ children }) => {
                 </div>
             </Sider>
 
-            {/* Main Content */}
             <Layout>
                 <Header
                     style={{
@@ -103,7 +108,7 @@ const DashboardLayout = ({ children }) => {
                         fontSize: 20,
                     }}
                 >
-                    My Dashboard
+                    {title} {/* Menggunakan prop title untuk mengubah judul */}
                 </Header>
                 <Content style={{ padding: "24px" }}>{children}</Content>
             </Layout>

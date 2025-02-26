@@ -10,10 +10,11 @@ const nextConfig = {
                 filename: "static/chunks/remoteEntry.js",
                 exposes: {
                     "./Button": "./src/components/Button", // Example component
+                    "./DashboardLayout": "./src/layouts/DashboardLayout",
                 },
                 remotes: {
                     material:
-                        "material@http://localhost:3001/_next/static/chunks/remoteEntry.js",
+                        "material@http://localhost:3000/_next/static/chunks/remoteEntry.js",
                 },
                 shared: {
                     // react: { singleton: true, requiredVersion: false },
