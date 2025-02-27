@@ -44,9 +44,14 @@ const TablePage = () => {
     const fetchData = async (currentPage = 1, pageSize = 10) => {
         setLoading(true);
         try {
-            const response = await axios.get(API_URL, {
+            const response = await axios.get("/api/conversions", {
                 params: { current_page: currentPage, page_size: pageSize },
+                headers: {
+                    "Content-Type": "application/json",
+                    "Access-Control-Allow-Origin": "*",
+                },
             });
+
             const apiData = response.data;
             setData(apiData.data || []);
             setPagination({
@@ -54,6 +59,7 @@ const TablePage = () => {
                 pageSize: apiData.pagination.page_size,
                 total: apiData.pagination.total_records,
             });
+
             console.log("API Response:", response.data);
             console.log("API Page:", apiData.pagination.current_page);
         } catch (error) {
@@ -122,7 +128,7 @@ const TablePage = () => {
                     description: "Conversion updated successfully.",
                 });
             } else {
-                await axios.post(API_URL, requestData);
+                await axios.post("/api/conversions", requestData);
                 notification.success({
                     message: "Success",
                     description: "Conversion added successfully.",

@@ -3,7 +3,7 @@ import { useState } from "react";
 import DashboardLayout from "/src/layouts/DashboardLayout";
 import dynamic from "next/dynamic";
 
-const MaterialPage = dynamic(() => import("material/pageMaterial"), {
+const SecurityPage = dynamic(() => import("material/pageSecurity"), {
     ssr: false, // Disable SSR for federated modules
 });
 
@@ -12,7 +12,7 @@ const { Title } = Typography;
 const TablePage = () => {
     return (
         <DashboardLayout disableLayout={true}>
-            <MaterialPage />
+            <SecurityPage />
         </DashboardLayout>
     );
 };
