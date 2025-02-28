@@ -27,3 +27,29 @@ export const createConversion = async (data) => {
         );
     }
 };
+
+export const deleteConversion = async (conversion_id, responsible_user_id) => {
+    try {
+        const response = await axios.delete(FULL_API_URL, {
+            data: { conversion_id, responsible_user_id },
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Error deleting conversion:", error);
+        throw new Error(
+            error.response?.data?.message || "Failed to delete conversion"
+        );
+    }
+};
+
+export const updateConversion = async (data) => {
+    try {
+        const response = await axios.patch(FULL_API_URL, data);
+        return response.data;
+    } catch (error) {
+        console.error("Error creating conversion:", error);
+        throw new Error(
+            error.response?.data?.message || "Failed to create conversion"
+        );
+    }
+};

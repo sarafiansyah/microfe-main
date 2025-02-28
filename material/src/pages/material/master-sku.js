@@ -19,13 +19,12 @@ import dynamic from "next/dynamic";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
-const API_URL = "/api/conversion/conversions"; // Calls Next.js API Proxy
 
 const TablePage = () => {
-    const [useDashboardLayout, setUseDashboardLayout] = useState(true); // ✅ Toggle state
+    const [useDashboardLayout, setUseDashboardLayout] = useState(false);
     const DashboardLayout = useDashboardLayout
         ? dynamic(() => import("adminWeb/DashboardLayout"), { ssr: false })
-        : ({ children }) => <>{children}</>; // ✅ Use Fragment if disabled
+        : ({ children }) => <>{children}</>;
 
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -103,8 +102,9 @@ const TablePage = () => {
         setIsProcessing(true);
         try {
             const values = await form.validateFields();
+
             const requestData = {
-                conversion_datetime: dayjs().format("YYYY-MM-DD HH:mm:ss"), // Default if not selected
+                conversion_datetime: dayjs().format("YYYY-MM-DD HH:mm:ss"), // Default timestamp
                 plant_id: values.plant_id || 10,
                 storage_location_id: values.storage_location_id || 31,
                 conversion_skus: [
@@ -120,14 +120,18 @@ const TablePage = () => {
                 responsible_user_id: 1,
             };
 
-            if (isEditMode && selectedRecord) {
+            if (isEditMode && selectedRecord?.conversion_id) {
                 requestData.conversion_id = selectedRecord.conversion_id;
-                await axios.patch(API_URL, requestData);
+                console.log("Updating conversion:", requestData); // Debug log
+
+                await axios.patch("/api/conversions", requestData);
                 notification.success({
                     message: "Success",
                     description: "Conversion updated successfully.",
                 });
             } else {
+                console.log("Creating new conversion:", requestData); // Debug log
+
                 await axios.post("/api/conversions", requestData);
                 notification.success({
                     message: "Success",
@@ -138,32 +142,55 @@ const TablePage = () => {
             fetchData(pagination.current, pagination.pageSize);
             setIsModalVisible(false);
         } catch (error) {
-            console.error("Error submitting data:", error);
-            message.error("Failed to submit data.");
+            console.error(
+                "Error submitting data:",
+                error.response?.data || error.message
+            );
+            message.error(
+                `Failed to submit data: ${
+                    error.response?.data?.error || "Unknown error"
+                }`
+            );
         }
         setIsProcessing(false);
     };
 
     const handleDelete = async (conversionId) => {
-        setIsProcessing(true);
-        try {
-            await axios.delete(API_URL, {
-                data: { conversion_id: conversionId, responsible_user_id: 1 },
-            });
-            notification.success({
-                message: "Success",
-                description: "Conversion deleted successfully.",
-            });
-            fetchData(1, pagination.pageSize);
-        } catch (error) {
-            console.error("Error deleting data:", error);
-            message.error("Failed to delete data.");
-        }
-        setIsProcessing(false);
+        Modal.confirm({
+            title: "Are you sure?",
+            content:
+                "Do you really want to delete this conversion? This action cannot be undone.",
+            okText: "Yes, Delete",
+            cancelText: "Cancel",
+            okType: "danger",
+            onOk: async () => {
+                setIsProcessing(true);
+                try {
+                    await axios.delete("/api/conversions", {
+                        data: {
+                            conversion_id: conversionId,
+                            responsible_user_id: 1,
+                        },
+                    });
+                    notification.success({
+                        message: "Success",
+                        description: "Conversion deleted successfully.",
+                    });
+                    fetchData(1, pagination.pageSize);
+                } catch (error) {
+                    console.error("Error deleting data:", error);
+                    message.error("Failed to delete data.");
+                }
+                setIsProcessing(false);
+            },
+        });
     };
 
     return (
-        <DashboardLayout disableLayout={!useDashboardLayout}>
+        <DashboardLayout
+            disableLayout={!useDashboardLayout}
+            title="Material App"
+        >
             <div style={{ padding: 20 }}>
                 <Space
                     style={{
@@ -176,8 +203,8 @@ const TablePage = () => {
                     <Switch
                         checked={useDashboardLayout}
                         onChange={setUseDashboardLayout}
-                        checkedChildren="Using Admin Web Dashboard"
-                        unCheckedChildren="Not Using Admin Web Dashboard"
+                        checkedChildren="Using Admin Web Header"
+                        unCheckedChildren="Not Using Admin Web Header"
                     />
                 </Space>
                 <Text
@@ -189,7 +216,10 @@ const TablePage = () => {
                 <Button
                     type="primary"
                     onClick={showAddModal}
-                    style={{ marginBottom: 16 }}
+                    style={{
+                        backgroundColor: "#008000",
+                        borderColor: "#008000",
+                    }}
                     disabled={isProcessing}
                 >
                     Add Data
@@ -197,10 +227,17 @@ const TablePage = () => {
                 <Table
                     columns={[
                         {
+                            title: "No",
+                            dataIndex: "conversion_id",
+                            key: "conversion_id",
+                            render: (_text, _record, index) => index + 1, // Display row number instead of conversion_id
+                        },
+                        {
                             title: "ID",
                             dataIndex: "conversion_id",
                             key: "conversion_id",
                         },
+
                         {
                             title: "Code",
                             dataIndex: "conversion_code",
@@ -237,14 +274,15 @@ const TablePage = () => {
                             render: (_, record) => (
                                 <Space>
                                     <Button
-                                        type="link"
+                                        type="primary"
+                                        color="yellow"
                                         onClick={() => showEditModal(record)}
                                         disabled={isProcessing}
                                     >
                                         Edit
                                     </Button>
                                     <Button
-                                        type="link"
+                                        type="primary"
                                         danger
                                         onClick={() =>
                                             handleDelete(record.conversion_id)

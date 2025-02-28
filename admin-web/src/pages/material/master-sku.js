@@ -11,7 +11,7 @@ const { Title } = Typography;
 
 const TablePage = () => {
     return (
-        <DashboardLayout disableLayout={false}>
+        <DashboardLayout disableLayout={false} title="Admin Web">
             <MaterialPage />
         </DashboardLayout>
     );

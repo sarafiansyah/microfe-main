@@ -8,7 +8,7 @@ const { Header, Sider, Content } = Layout;
 const DashboardLayout = ({
     children,
     disableLayout = false,
-    title = "Admin Web",
+    title = "Dashboard",
 }) => {
     const router = useRouter();
     const [collapsed, setCollapsed] = useState(false);
