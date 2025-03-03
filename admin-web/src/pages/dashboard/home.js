@@ -1,9 +1,21 @@
 import DashboardLayout from "/src/layouts/DashboardLayout";
+import Footer from "/src/layouts/Footer";
 
 const Dashboard = () => {
     return (
         <DashboardLayout>
-            <h1>This is Admin Web Host App.</h1>
+            <div
+                style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    minHeight: "100vh",
+                }}
+            >
+                <main style={{ flex: 1 }}>
+                    <h1>This is Admin Web Host App.</h1>
+                </main>
+                <Footer />
+            </div>
         </DashboardLayout>
     );
 };

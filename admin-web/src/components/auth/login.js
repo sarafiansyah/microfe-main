@@ -1,74 +1,117 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Form, Input, Button, message, Card } from "antd";
-import users from "../data/users.json"; // Import user data directly
+import { login } from "material/authSecurity"; // Import the remote login function
+import Footer from "/src/layouts/Footer";
 
-const Login = () => {
+const LoginPage = () => {
+    const [appTitle, setAppTitle] = useState("No Modules Federated");
     const [loading, setLoading] = useState(false);
+    const year = new Date().getFullYear();
 
-    const handleLogin = (values) => {
+    const handleLogin = async (values) => {
         setLoading(true);
-
-        // Check if user exists in users.json
-        const user = users.find(
-            (u) =>
-                u.username === values.username && u.password === values.password
-        );
-
-        if (user) {
-            message.success("Login successful!");
-            localStorage.setItem("user", JSON.stringify(user));
-
-            // Redirect after login
-            setTimeout(() => {
-                window.location.href = "/dashboard/home"; // Redirect to dashboard
-            }, 1000);
-        } else {
-            message.error("Invalid username or password!");
+        try {
+            const result = await login(values.username, values.password);
+            message.success(result.message);
+            window.location.href = "/dashboard/home"; // Redirect after login
+        } catch (error) {
+            message.error(error.message);
         }
-
         setLoading(false);
     };
 
+    useEffect(() => {
+        const fetchRemoteInfo = async () => {
+            try {
+                const remoteApp = await import("material/AppInfo");
+
+                console.log("Remote App Info:", remoteApp.default); // Debugging
+
+                if (remoteApp && remoteApp.default) {
+                    const { auth, authVersion } = remoteApp.default;
+                    setAppTitle(`${auth} (v${authVersion ?? "unknown"})`); // Handle undefined version
+                }
+            } catch (error) {
+                console.error("Failed to fetch remote app info:", error);
+            }
+        };
+
+        fetchRemoteInfo();
+    }, []);
+
     return (
-        <Card title="Login" style={{ width: 350, textAlign: "center" }}>
-            <Form layout="vertical" onFinish={handleLogin}>
-                <Form.Item
-                    label="Username"
-                    name="username"
-                    rules={[
-                        {
-                            required: true,
-                            message: "Please enter your username",
-                        },
-                    ]}
-                >
-                    <Input />
-                </Form.Item>
+        <div
+            style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                minHeight: "100vh",
+                gap: "20px",
+            }}
+        >
+            <Card title="Login" style={{ width: 350, textAlign: "center" }}>
+                <Form layout="vertical" onFinish={handleLogin}>
+                    <Form.Item
+                        label="Username"
+                        name="username"
+                        rules={[
+                            {
+                                required: true,
+                                message: "Please enter your username",
+                            },
+                        ]}
+                    >
+                        <Input />
+                    </Form.Item>
 
-                <Form.Item
-                    label="Password"
-                    name="password"
-                    rules={[
-                        {
-                            required: true,
-                            message: "Please enter your password",
-                        },
-                    ]}
-                >
-                    <Input.Password />
-                </Form.Item>
+                    <Form.Item
+                        label="Password"
+                        name="password"
+                        rules={[
+                            {
+                                required: true,
+                                message: "Please enter your password",
+                            },
+                        ]}
+                    >
+                        <Input.Password />
+                    </Form.Item>
 
-                <Button
-                    type="primary"
-                    htmlType="submit"
-                    loading={loading}
-                    block
+                    <Button
+                        type="primary"
+                        htmlType="submit"
+                        loading={loading}
+                        block
+                    >
+                        Login
+                    </Button>
+                </Form>
+            </Card>
+
+            {/* Footer with smaller font size */}
+            <div
+                style={{
+                    fontSize: "12px",
+                    textAlign: "center",
+                    marginTop: "-20px",
+                }}
+            >
+                <footer
+                    style={{
+                        textAlign: "center",
+                        padding: "10px",
+                        marginTop: "20px",
+                    }}
                 >
-                    Login
-                </Button>
-            </Form>
-        </Card>
+                    <p>
+                        &copy; {year} Admin Web Host App . Secured By :{" "}
+                        <b>{appTitle || "No Modules Federated"}</b>
+                    </p>
+                </footer>
+            </div>
+        </div>
     );
 };
 
-export default Login;
+export default LoginPage;

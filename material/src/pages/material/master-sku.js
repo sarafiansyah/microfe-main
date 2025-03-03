@@ -16,9 +16,11 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import dayjs from "dayjs";
 import dynamic from "next/dynamic";
+import { ReloadOutlined, PlusOutlined } from "@ant-design/icons";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
+const { Search } = Input;
 
 const TablePage = () => {
     const [useDashboardLayout, setUseDashboardLayout] = useState(false);
@@ -39,6 +41,9 @@ const TablePage = () => {
     const [isEditMode, setIsEditMode] = useState(false);
     const [selectedRecord, setSelectedRecord] = useState(null);
     const [form] = Form.useForm();
+    const [searchQuery, setSearchQuery] = useState("");
+    const [rawData, setRawData] = useState([]); // Data asli dari API
+    const [filteredData, setFilteredData] = useState([]); // Data setelah difilter
 
     const fetchData = async (currentPage = 1, pageSize = 10) => {
         setLoading(true);
@@ -52,15 +57,16 @@ const TablePage = () => {
             });
 
             const apiData = response.data;
-            setData(apiData.data || []);
+            console.log("API Response:", apiData); // Debugging
+
+            setRawData(apiData.data || []); // Simpan data asli
+            setFilteredData(apiData.data || []); // Tampilkan awalnya semua data
+
             setPagination({
                 current: apiData.pagination.current_page,
                 pageSize: apiData.pagination.page_size,
                 total: apiData.pagination.total_records,
             });
-
-            console.log("API Response:", response.data);
-            console.log("API Page:", apiData.pagination.current_page);
         } catch (error) {
             console.error("Error fetching data:", error);
             message.error("Failed to fetch data.");
@@ -71,6 +77,19 @@ const TablePage = () => {
     useEffect(() => {
         fetchData();
     }, []);
+
+    useEffect(() => {
+        if (searchQuery) {
+            const filtered = rawData.filter((item) =>
+                item.conversion_code
+                    .toLowerCase()
+                    .includes(searchQuery.toLowerCase())
+            );
+            setFilteredData(filtered);
+        } else {
+            setFilteredData(rawData);
+        }
+    }, [searchQuery, rawData]);
 
     const handleTableChange = (newPagination) => {
         console.log("Table Pagination Change:", newPagination);
@@ -96,6 +115,29 @@ const TablePage = () => {
         setSelectedRecord(record);
         form.setFieldsValue(record);
         setIsModalVisible(true);
+    };
+
+    // Function untuk handle refresh
+    const handleRefresh = () => {
+        fetchData(); // Panggil ulang API
+    };
+
+    // Function untuk handle pencarian
+    const handleSearch = (value) => {
+        console.log("Search Query:", value); // Debugging
+        console.log("Raw Data Before Filter:", rawData); // Debugging
+
+        if (value.trim() !== "") {
+            const filtered = rawData.filter((item) =>
+                item.conversion_code
+                    ?.toLowerCase()
+                    .includes(value.toLowerCase())
+            );
+            console.log("Filtered Data:", filtered); // Debugging
+            setFilteredData(filtered);
+        } else {
+            setFilteredData(rawData);
+        }
     };
 
     const handleSubmit = async () => {
@@ -213,17 +255,43 @@ const TablePage = () => {
                 >
                     Material Remote App
                 </Text>
-                <Button
-                    type="primary"
-                    onClick={showAddModal}
-                    style={{
-                        backgroundColor: "#008000",
-                        borderColor: "#008000",
-                    }}
-                    disabled={isProcessing}
-                >
-                    Add Data
-                </Button>
+                <Space style={{ marginBottom: 10, gap: 8 }}>
+                    {/* Search Input */}
+                    <Search
+                        placeholder="Search by Conversion Code"
+                        allowClear
+                        onSearch={handleSearch}
+                        style={{ width: 300 }}
+                    />
+
+                    {/* Tombol Refresh */}
+                    <Button
+                        type="primary"
+                        icon={<ReloadOutlined />}
+                        style={{
+                            backgroundColor: "#0d6efd",
+                            borderColor: "#0d6efd",
+                        }}
+                        onClick={handleRefresh}
+                    >
+                        Refresh
+                    </Button>
+
+                    {/* Tombol Add Data */}
+                    <Button
+                        type="primary"
+                        icon={<PlusOutlined />}
+                        onClick={showAddModal}
+                        style={{
+                            backgroundColor: "#008000",
+                            borderColor: "#008000",
+                        }}
+                        disabled={isProcessing}
+                    >
+                        Add Data
+                    </Button>
+                </Space>
+
                 <Table
                     columns={[
                         {
@@ -275,9 +343,10 @@ const TablePage = () => {
                                 <Space>
                                     <Button
                                         type="primary"
-                                        color="yellow"
-                                        onClick={() => showEditModal(record)}
-                                        disabled={isProcessing}
+                                        disabled={[
+                                            "Released",
+                                            "Submitted",
+                                        ].includes(record.status_name)}
                                     >
                                         Edit
                                     </Button>
@@ -296,7 +365,7 @@ const TablePage = () => {
                         },
                     ]}
                     key={pagination.current}
-                    dataSource={data}
+                    dataSource={filteredData}
                     loading={loading}
                     rowKey="conversion_id"
                     pagination={{

@@ -18,6 +18,8 @@ const nextConfig = {
                 name: "material",
                 filename: "static/chunks/remoteEntry.js",
                 exposes: {
+                    "./AppInfo": "./src/components/AppInfo",
+                    "./authSecurity": "./src/pages/security/auth/login",
                     "./Button": "./src/components/Button", // Example exposed component
                     "./pageMaterial": "./src/pages/material/master-sku",
                     "./pageSecurity": "./src/pages/security/users",
