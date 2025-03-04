@@ -1,7 +1,11 @@
-import { Layout, Menu } from "antd";
+import { Layout, Menu, Avatar, Dropdown } from "antd";
 import { useRouter } from "next/router";
-import { MenuUnfoldOutlined, MenuFoldOutlined } from "@ant-design/icons";
-import { useState } from "react";
+import {
+    MenuUnfoldOutlined,
+    MenuFoldOutlined,
+    UserOutlined,
+} from "@ant-design/icons";
+import { useState, useEffect } from "react";
 
 const { Header, Sider, Content } = Layout;
 
@@ -12,6 +16,14 @@ const DashboardLayout = ({
 }) => {
     const router = useRouter();
     const [collapsed, setCollapsed] = useState(false);
+    const [user, setUser] = useState({ username: "", role: "" });
+
+    useEffect(() => {
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) {
+            setUser(JSON.parse(storedUser));
+        }
+    }, []);
 
     const handleLogout = () => {
         localStorage.removeItem("token");
@@ -22,6 +34,20 @@ const DashboardLayout = ({
     if (disableLayout) {
         return <>{children}</>;
     }
+
+    const menu = (
+        <Menu>
+            <Menu.Item key="1">Profile</Menu.Item>
+            <Menu.Item key="2">Settings</Menu.Item>
+            <Menu.Item
+                key="3"
+                onClick={handleLogout}
+                style={{ color: "#FF4D4F" }}
+            >
+                Logout
+            </Menu.Item>
+        </Menu>
+    );
 
     return (
         <Layout style={{ minHeight: "100vh" }}>
@@ -104,11 +130,51 @@ const DashboardLayout = ({
                 <Header
                     style={{
                         background: "#fff",
-                        textAlign: "center",
-                        fontSize: 20,
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        padding: "0 20px",
                     }}
                 >
-                    {title} {/* Menggunakan prop title untuk mengubah judul */}
+                    <span style={{ fontSize: 20 }}>{title}</span>
+                    <Dropdown overlay={menu} trigger={["click"]}>
+                        <div
+                            style={{
+                                display: "flex",
+                                alignItems: "center",
+                                cursor: "pointer",
+                                gap: "8px", // Adjust spacing between avatar and text
+                            }}
+                        >
+                            <Avatar icon={<UserOutlined />} />
+                            <div
+                                style={{
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    lineHeight: "1.2",
+                                }}
+                            >
+                                <div
+                                    style={{
+                                        fontSize: "14px",
+                                        fontWeight: "bold",
+                                    }}
+                                >
+                                    {user.username
+                                        ? user.username
+                                              .charAt(0)
+                                              .toUpperCase() +
+                                          user.username.slice(1).toLowerCase()
+                                        : "User"}
+                                </div>
+                                <div
+                                    style={{ fontSize: "12px", color: "gray" }}
+                                >
+                                    {user.role || "Role"}
+                                </div>
+                            </div>
+                        </div>
+                    </Dropdown>
                 </Header>
                 <Content style={{ padding: "24px" }}>{children}</Content>
             </Layout>
